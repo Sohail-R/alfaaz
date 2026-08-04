@@ -13,7 +13,6 @@ audioread==3.1.0
 autograder-py==0.6.17
 babel==2.18.0
 backports.tarfile==1.2.0
-basic-pitch==0.4.0
 beautifulsoup4==4.14.3
 bleach==6.3.0
 blinker==1.9.0
