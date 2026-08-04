@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Flashcards — Alfaaz{% endblock %}
+{% block nav_flash %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Flashcards</h1>
+    <p class="page-subtitle">Hardest words first</p>
+
+    {% if deck %}
+    <div class="fc-progress">
+        <span id="progressText">Word 1 of {{ deck|length }}</span>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <div class="card" id="card">
+        <div class="card-word" id="cardWord" dir="rtl"></div>
+        <div class="card-roman" id="cardRoman"></div>
+        <div class="card-answer" id="cardAnswer"></div>
+        <div class="card-context" id="cardContext" dir="rtl"></div>
+    </div>
+
+    <div class="fc-buttons" id="btnReveal">
+        <button class="btn btn-reveal" onclick="window.fcReveal()">Show Answer</button>
+    </div>
+    <div class="fc-buttons hidden" id="btnGrade">
+        <button class="btn btn-wrong"   onclick="window.fcGrade(false)">✗ Wrong</button>
+        <button class="btn btn-correct" onclick="window.fcGrade(true)">✓ Correct</button>
+    </div>
+    <div class="complete-card hidden" id="complete">
+        <h2>Session complete</h2>
+        <p id="scoreText"></p>
+        <button class="btn btn-reveal" onclick="location.reload()">Go again</button>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p>No words in your deck yet.</p>
+        <a href="/read">Read a poem and save some words →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var deck = {{ deck | tojson }};
+    var index = 0;
+    var correct = 0;
+
+    // ── Flash fix: force elements invisible before setting content ──
+    function hideInstant(id) {
+        var el = document.getElementById(id);
+        el.style.transition = 'none';
+        el.style.opacity = '0';
+        el.style.visibility = 'hidden';
+        el.classList.remove('visible');
+    }
+    function showAnimated(id) {
+        var el = document.getElementById(id);
+        requestAnimationFrame(function() {
+            el.style.transition = '';
+            el.style.opacity = '';
+            el.style.visibility = '';
+            el.classList.add('visible');
+        });
+    }
+
+    function loadCard() {
+        if (index >= deck.length) {
+            document.getElementById('card').classList.add('hidden');
+            document.getElementById('btnReveal').classList.add('hidden');
+            document.getElementById('btnGrade').classList.add('hidden');
+            document.getElementById('complete').classList.remove('hidden');
+            document.getElementById('scoreText').textContent =
+                correct + ' of ' + deck.length + ' correct — ' +
+                Math.round((correct / deck.length) * 100) + '% accuracy';
+            return;
+        }
+
+        var row         = deck[index];
+        var word        = row[0];
+        var translation = row[1];
+        var context     = row[3] || '';
+
+        // hide everything instantly BEFORE setting content — prevents flash
+        hideInstant('cardAnswer');
+        hideInstant('cardContext');
+        hideInstant('cardRoman');
+
+        document.getElementById('card').classList.remove('correct-flash', 'wrong-flash');
+        document.getElementById('cardWord').textContent    = word;
+        document.getElementById('cardAnswer').textContent  = translation;
+        document.getElementById('cardContext').textContent = context;
+        document.getElementById('cardRoman').textContent   = '';
+
+        document.getElementById('btnReveal').classList.remove('hidden');
+        document.getElementById('btnGrade').classList.add('hidden');
+
+        var pct = Math.round((index / deck.length) * 100);
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressText').textContent =
+            'Word ' + (index + 1) + ' of ' + deck.length;
+
+        // fetch roman for this word
+        fetch('/transliterate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lines: [word] })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.lines && data.lines[0]) {
+                document.getElementById('cardRoman').textContent = data.lines[0];
+            }
+        });
+    }
+
+    window.fcReveal = function() {
+        showAnimated('cardAnswer');
+        showAnimated('cardContext');
+        showAnimated('cardRoman');
+        document.getElementById('btnReveal').classList.add('hidden');
+        document.getElementById('btnGrade').classList.remove('hidden');
+    };
+
+    window.fcGrade = function(wasCorrect) {
+        var word = deck[index][0];
+        if (wasCorrect) correct++;
+        var card = document.getElementById('card');
+        card.classList.add(wasCorrect ? 'correct-flash' : 'wrong-flash');
+
+        fetch('/review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word: word, correct: wasCorrect })
+        });
+
+        setTimeout(function() { index++; loadCard(); }, 400);
+    };
+
+    loadCard();
+})();
+</script>
+{% endblock %}

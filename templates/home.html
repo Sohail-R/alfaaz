@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Alfaaz — Urdu Poetry Vocabulary{% endblock %}
+{% block body_class %}home-page{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-inner">
+        <div class="hero-badge">الفاظ</div>
+        <h1 class="hero-title">Alfaaz</h1>
+        <p class="hero-tagline">Your personal Urdu poetry vocabulary journal</p>
+        <p class="hero-sub">
+            Read poems from Rekhta. Click words you don't know.<br>
+            Build a flashcard deck. Master the language.
+        </p>
+        <a href="/read" class="hero-cta">Begin Reading <span>→</span></a>
+    </div>
+
+    <div class="hero-poem">
+        <div class="hero-poem-line">مجھ سے پہلی سی محبت مری محبوب نہ مانگ</div>
+        <div class="hero-poem-trans">Don't ask me for that love again, my love</div>
+        <div class="hero-poem-attr">— فیض احمد فیض</div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-num">01</div>
+            <h3>Read in Nastaliq</h3>
+            <p>Load any nazm from Rekhta and read it in beautiful Urdu script, with optional Roman transliteration for each line.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">02</div>
+            <h3>Save with Context</h3>
+            <p>Click any word you don't know. AI translates it in the context of its line — not just literally — and saves it to your personal deck.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">03</div>
+            <h3>Master Your Deck</h3>
+            <p>Review with flashcards ordered by difficulty. Words you struggle with come first. Track accuracy and watch yourself improve.</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-section">
+    <h2 class="section-title">How it works</h2>
+    <div class="steps-row">
+        <div class="step-item">
+            <div class="step-circle">1</div>
+            <p>Paste a Rekhta poem URL</p>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+            <div class="step-circle">2</div>
+            <p>Click unknown words to translate and save</p>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+            <div class="step-circle">3</div>
+            <p>Review your deck and track your progress</p>
+        </div>
+    </div>
+    <div class="how-cta">
+        <a href="/read" class="hero-cta">Start Now →</a>
+    </div>
+</section>
+
+{% endblock %}

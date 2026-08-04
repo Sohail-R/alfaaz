@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Vocab — Alfaaz{% endblock %}
+{% block nav_vocab %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My Vocab</h1>
+    <p class="page-subtitle">Words saved from your reading</p>
+
+    {% if words %}
+    <p class="vocab-count"><span>{{ words|length }}</span> words collected</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Word</th>
+                <th>Meaning</th>
+                <th>Source</th>
+                <th>Context</th>
+                <th>Saved</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for word in words %}
+            <tr>
+                <td class="urdu-cell" data-urdu="{{ word[1] }}">{{ word[1] }}</td>
+                <td class="translation-cell">{{ word[2] }}</td>
+                <td>{{ word[3] }}</td>
+                <td class="context-cell" data-urdu="{{ word[4] }}">{{ word[4] }}</td>
+                <td>{{ word[5] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>No words saved yet.</p>
+        <a href="/read">Read a poem and start clicking words →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

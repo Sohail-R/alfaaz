@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Read — Alfaaz{% endblock %}
+{% block nav_read %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Read a Poem</h1>
+    <p class="page-subtitle">Paste a Rekhta nazm URL to begin</p>
+
+    <form class="search-wrap" method="GET" action="/read">
+        <input type="text" name="url"
+            placeholder="https://www.rekhta.org/nazms/..."
+            value="{{ url }}" autocomplete="off">
+        <button type="submit">Load</button>
+    </form>
+
+    {% if error %}
+        <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    {% if poem %}
+        <div class="poem-meta">
+            <div class="poem-title" data-urdu="{{ poem.title }}">{{ poem.title }}</div>
+            <div class="poem-poet"  data-urdu="{{ poem.poet }}">{{ poem.poet }}</div>
+        </div>
+
+        <div class="controls-bar">
+            <span class="hint-text">Click any word to save its translation</span>
+            <div class="controls-right">
+                <button class="toggle-btn active" id="translationToggleBtn" onclick="toggleTranslation()">Translation: ON</button>
+                <button class="toggle-btn" id="lineRomanBtn" onclick="toggleLineRoman()">Line Transliteration</button>
+            </div>
+        </div>
+
+        <!-- Two column poem viewer -->
+        <div class="poem-columns" id="poemColumns">
+
+            <!-- Left: English translation -->
+            <div class="col-english" id="colEnglish">
+                <div class="col-label">English</div>
+                <div id="englishLines" class="english-lines">
+                    {% for line in poem.lines %}
+                    <div class="english-line loading" data-index="{{ loop.index0 }}">…</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-divider" id="colDivider"></div>
+
+            <!-- Right: Urdu -->
+            <div class="col-urdu" id="colUrdu">
+                <div class="col-label" style="text-align:right">اردو</div>
+                <div class="poem-body">
+                    {% for line in poem.lines %}
+                    <div class="poem-line">
+                        <div class="line-urdu">
+                            {% for word in line.split() %}
+                            <span class="word"
+                                data-word="{{ word }}"
+                                data-line="{{ line }}"
+                                data-title="{{ poem.title }}"
+                                onclick="saveWord(this)">{{ word }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="roman-line" data-roman-for="{{ line }}"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var translationOn  = true;
+    var lineRomanOn    = false;
+    var lineRomanLoaded = false;
+
+    {% if poem %}
+    var poemLines = {{ poem.lines | tojson }};
+    {% else %}
+    var poemLines = [];
+    {% endif %}
+
+    // ── Load English translations on page load ───────────────────
+    if (poemLines.length > 0) {
+        fetch('/translate-lines', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lines: poemLines })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var divs = document.querySelectorAll('.english-line');
+            data.translations.forEach(function(t, i) {
+                if (divs[i]) {
+                    divs[i].textContent = t || '—';
+                    divs[i].classList.remove('loading');
+                }
+            });
+        })
+        .catch(function() {
+            document.querySelectorAll('.english-line').forEach(function(el) {
+                el.textContent = '—';
+                el.classList.remove('loading');
+            });
+        });
+    }
+
+    // ── Translation column toggle ────────────────────────────────
+    window.toggleTranslation = function() {
+        translationOn = !translationOn;
+        var btn       = document.getElementById('translationToggleBtn');
+        var colEn     = document.getElementById('colEnglish');
+        var colDiv    = document.getElementById('colDivider');
+        var cols      = document.getElementById('poemColumns');
+
+        btn.textContent = translationOn ? 'Translation: ON' : 'Translation: OFF';
+        btn.classList.toggle('active', translationOn);
+
+        if (translationOn) {
+            colEn.classList.remove('hidden');
+            colDiv.classList.remove('hidden');
+            cols.classList.remove('urdu-only');
+        } else {
+            colEn.classList.add('hidden');
+            colDiv.classList.add('hidden');
+            cols.classList.add('urdu-only');
+        }
+    };
+
+    // ── Line romanization toggle ─────────────────────────────────
+    window.toggleLineRoman = function() {
+        lineRomanOn = !lineRomanOn;
+        var btn = document.getElementById('lineRomanBtn');
+        btn.classList.toggle('active', lineRomanOn);
+        btn.textContent = lineRomanOn ? 'Hide Lines' : 'Line Transliteration';
+
+        if (lineRomanOn && !lineRomanLoaded) {
+            fetch('/transliterate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lines: poemLines })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var divs = document.querySelectorAll('.roman-line');
+                data.lines.forEach(function(roman, i) {
+                    if (divs[i]) divs[i].textContent = roman;
+                });
+                lineRomanLoaded = true;
+                showLineRoman();
+            });
+        } else if (lineRomanOn) {
+            showLineRoman();
+        } else {
+            hideLineRoman();
+        }
+    };
+
+    function showLineRoman() {
+        document.querySelectorAll('.roman-line').forEach(function(el) { el.classList.add('visible'); });
+    }
+    function hideLineRoman() {
+        document.querySelectorAll('.roman-line').forEach(function(el) { el.classList.remove('visible'); });
+    }
+
+    // ── Word save ────────────────────────────────────────────────
+    window.saveWord = function(el) {
+        var word  = el.getAttribute('data-word');
+        var line  = el.getAttribute('data-line');
+        var title = el.getAttribute('data-title');
+        el.classList.add('saving');
+
+        fetch('/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word: word, line: line, title: title })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            el.classList.remove('saving');
+            if (data.translation) {
+                el.classList.add('saved');
+                showToast(word + '  ·  ' + data.translation);
+            } else {
+                showToast('Could not translate');
+            }
+        })
+        .catch(function() {
+            el.classList.remove('saving');
+            showToast('Something went wrong');
+        });
+    };
+})();
+</script>
+{% endblock %}

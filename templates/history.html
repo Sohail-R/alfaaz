@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}History — Alfaaz{% endblock %}
+{% block nav_hist %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Reading History</h1>
+    <p class="page-subtitle">Poems you've explored</p>
+
+    {% if poems %}
+    <div class="history-list">
+        {% for poem in poems %}
+        <a class="history-item" href="/read?url={{ poem[2] }}">
+            <div class="history-left">
+                <div class="history-title" data-urdu="{{ poem[0] }}">{{ poem[0] }}</div>
+                <div class="history-poet" data-urdu="{{ poem[1] }}">{{ poem[1] }}</div>
+            </div>
+            <div class="history-right">
+                <span class="history-lines">{{ poem[3] }} lines</span>
+                <span class="history-date">{{ poem[4] }}</span>
+                <span class="history-arrow">→</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No poems read yet.</p>
+        <a href="/read">Load your first poem →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

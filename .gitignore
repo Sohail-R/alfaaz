@@ -1,0 +1,6 @@
+vocab.db
+.env
+venv/
+__pycache__/
+*.pyc
+.DS_Store

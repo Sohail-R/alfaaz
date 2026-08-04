@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Alfaaz{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+<nav id="mainNav">
+    <a class="nav-brand" href="/">
+        <span class="logo-en">Alfaaz</span>
+        <span class="logo-ur">الفاظ</span>
+    </a>
+    <a class="nav-link {% block nav_read %}{% endblock %}" href="/read">Read</a>
+    <a class="nav-link {% block nav_vocab %}{% endblock %}" href="/vocab">Vocab</a>
+    <a class="nav-link {% block nav_flash %}{% endblock %}" href="/flashcards">Flashcards</a>
+    <a class="nav-link {% block nav_hist %}{% endblock %}" href="/history">History</a>
+    <button class="toggle-btn" id="translitToggle" onclick="TranslitManager.toggle()">Roman</button>
+</nav>
+
+{% block content %}{% endblock %}
+
+<div id="toast" class="toast"></div>
+<script src="/static/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
