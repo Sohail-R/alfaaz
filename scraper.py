@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-from playwright.sync_api import sync_playwright
+#from playwright.sync_api import sync_playwright
 from html import unescape
 
 HEADERS = {
@@ -15,7 +15,29 @@ HEADERS = {
 }
 
 def fetch_page(url):
-    with sync_playwright() as p:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+    }
+    try:
+        session = requests.Session()
+        session.get("https://www.rekhta.org", headers=headers)
+        time.sleep(1)
+        response = session.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.text
+        else:
+            print(f"Failed: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+    
+    '''with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         
@@ -31,6 +53,7 @@ def fetch_page(url):
             
         finally:
             browser.close()
+            '''
 
     
 
